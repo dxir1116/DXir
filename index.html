@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danmaku Dodge - Instant Death</title>
+    <style>
+        canvas {
+            border: 2px solid black;
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height - 50,
+            radius: 10,
+            color: 'blue',
+            speed: 5
+        };
+
+        const bullets = [];
+        let isGameOver = false;
+
+        // 플레이어 이동
+        function movePlayer(direction) {
+            switch(direction) {
+                case 'left':
+                    if (player.x - player.speed - player.radius > 0) player.x -= player.speed;
+                    break;
+                case 'right':
+                    if (player.x + player.speed + player.radius < canvas.width) player.x += player.speed;
+                    break;
+                case 'up':
+                    if (player.y - player.speed - player.radius > 0) player.y -= player.speed;
+                    break;
+                case 'down':
+                    if (player.y + player.speed + player.radius < canvas.height) player.y += player.speed;
+                    break;
+            }
+        }
+
+        // 총알 생성
+        function createBullet() {
+            const bullet = {
+                x: Math.random() * canvas.width,
+                y: 0,
+                radius: 5,
+                speed: 50,
+                color: 'red'
+            };
+            bullets.push(bullet);
+        }
+
+        // 총알 이동
+        function moveBullets() {
+            bullets.forEach(bullet => {
+                bullet.y += bullet.speed;
+            });
+        }
+
+        // 총알 그리기
+        function drawBullets() {
+            bullets.forEach(bullet => {
+                ctx.beginPath();
+                ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
+                ctx.fillStyle = bullet.color;
+                ctx.fill();
+                ctx.closePath();
+            });
+        }
+
+        // 충돌 감지
+        function detectCollision() {
+            bullets.forEach(bullet => {
+                const distance = Math.sqrt(Math.pow(player.x - bullet.x, 2) + Math.pow(player.y - bullet.y, 2));
+                if (distance < player.radius + bullet.radius) {
+                    isGameOver = true;
+                }
+            });
+        }
+
+        // 게임 루프
+        function gameLoop() {
+            if (!isGameOver) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                moveBullets();
+                detectCollision();
+                drawBullets();
+
+                ctx.beginPath();
+                ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+                ctx.fillStyle = player.color;
+                ctx.fill();
+                ctx.closePath();
+
+                requestAnimationFrame(gameLoop);
+            } else {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'black';
+                ctx.font = '30px Arial';
+                ctx.fillText('Game Over', canvas.width / 2 - 80, canvas.height / 2);
+            }
+        }
+
+        // 키보드 입력 처리
+        document.addEventListener('keydown', (event) => {
+            if (!isGameOver) {
+                if (event.key === 'ArrowLeft') {
+                    movePlayer('left');
+                } else if (event.key === 'ArrowRight') {
+                    movePlayer('right');
+                } else if (event.key === 'ArrowUp') {
+                    movePlayer('up');
+                } else if (event.key === 'ArrowDown') {
+                    movePlayer('down');
+                }
+            }
+        });
+
+        // 게임 시작
+        setInterval(createBullet, 1000);
+        gameLoop();
+    </script>
+</body>
+</html>
